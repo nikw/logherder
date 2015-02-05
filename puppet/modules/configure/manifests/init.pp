@@ -1,6 +1,15 @@
 class configure {
-  exec { "update_and_upgrade":
-    command => "/usr/bin/apt-get -q update && /usr/bin/apt-get upgrade"
+  exec { 'update_and_upgrade':
+    require => File[
+      '/etc/apt/sources.list.d/elasticsearch.list',
+      '/etc/apt/sources.list.d/logstash.list'
+    ],
+    before  => Package[
+      'java8-runtime',
+      'elasticsearch',
+      'logstash'
+    ],
+    command => "/usr/bin/apt-get -q -y update && /usr/bin/apt-get -q -y upgrade"
   }
 
   package { 'java8-runtime':
@@ -27,7 +36,10 @@ class configure {
   }
 
   service { 'logstash':
-    require => Service['elasticsearch'],
+    require => [
+      Service['elasticsearch'],
+      Package['logstash']
+    ],
     ensure => running,
     enable => true,
     hasrestart => true,

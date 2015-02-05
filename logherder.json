@@ -1,0 +1,320 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Mappings": {
+      "RegionMap": {
+        "ap-northeast-1": {
+          "64": "ami-02707d03"
+        },
+        "ap-southeast-1": {
+          "64": "ami-45f0dc17"
+        },
+        "ap-southeast-2": {
+          "64": "ami-896008b3"
+        },
+        "cn-north-1": {
+          "64": "ami-a47fed9d"
+        },
+        "eu-central-1": {
+          "64": "ami-f2ab9aef"
+        },
+        "eu-west-1": {
+          "64": "ami-7ef24d09"
+        },
+        "sa-east-1": {
+          "64": "ami-df60d0c2"
+        },
+        "us-east-1": {
+          "64": "ami-30d0b458"
+        },
+        "us-gov-west-1": {
+          "64": "ami-3bb7d118"
+        },
+        "us-west-1": {
+          "64": "ami-81afbcc4"
+        },
+        "us-west-2": {
+          "64": "ami-91c593a1"
+        }
+      }
+    },
+    "Parameters": {
+      "InstanceType": {
+        "Description": "Instance type for the, you know, instance",
+        "Type": "String",
+        "Default": "t2.medium"
+      },
+      "VpcCidr": {
+        "Description": "The VPC Network Range",
+        "Type": "String",
+        "MinLength": "9",
+        "MaxLength": "18",
+        "Default": "0.0.0.0/0",
+        "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+        "ConstraintDescription": "must be a valid IP CIDR range of the form x.x.x.x/x."
+      },
+      "Subnet1Cidr": {
+        "Description": "The Subnet Network Range",
+        "Type": "String",
+        "MinLength": "9",
+        "MaxLength": "18",
+        "Default": "0.0.0.0/0",
+        "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+        "ConstraintDescription": "must be a valid IP CIDR range of the form x.x.x.x/x."
+      },
+      "AvailabilityZone": {
+        "Description": "Availability Zone for subnet and instance",
+        "Type": "String"
+      },
+      "NameTag": {
+        "Description": "Brief description to be added to 'Name' tags",
+        "Type": "String"
+      }
+    },
+    "Resources": {
+      "vpc": {
+        "Type": "AWS::EC2::VPC",
+        "Properties": {
+          "CidrBlock": {
+            "Ref": "VpcCidr"
+          },
+          "InstanceTenancy": "default",
+          "EnableDnsSupport": "true",
+          "EnableDnsHostnames": "true",
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": {
+                "Ref": "NameTag"
+              }
+            }
+          ]
+        }
+      },
+      "internetGateway": {
+        "Type": "AWS::EC2::InternetGateway",
+        "Properties": {
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": {
+                "Ref": "NameTag"
+              }
+            }
+          ]
+        }
+      },
+      "networkACL": {
+        "Type": "AWS::EC2::NetworkAcl",
+        "Properties": {
+          "VpcId": {
+            "Ref": "vpc"
+          }
+        }
+      },
+      "routeTable": {
+        "Type": "AWS::EC2::RouteTable",
+        "Properties": {
+          "VpcId": {
+            "Ref": "vpc"
+          },
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": {
+                "Ref": "NameTag"
+              }
+            }
+          ]
+        }
+      },
+      "VpcSecurityGroup": {
+        "Type": "AWS::EC2::SecurityGroup",
+        "Properties": {
+          "GroupDescription": "VPC Default Security Group",
+          "VpcId": {
+            "Ref": "vpc"
+          },
+          "SecurityGroupIngress": [
+            {
+              "IpProtocol": "tcp",
+              "CidrIp": "216.203.6.11/32",
+              "FromPort": "22",
+              "ToPort": "22"
+            }
+          ],
+          "SecurityGroupEgress": [
+            {
+              "IpProtocol": "-1",
+              "CidrIp": "0.0.0.0/0"
+            }
+          ],
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": {
+                "Ref": "NameTag"
+              }
+            }
+          ]
+        }
+      },
+      "acl1": {
+        "Type": "AWS::EC2::NetworkAclEntry",
+        "Properties": {
+          "CidrBlock": "0.0.0.0/0",
+          "Egress": true,
+          "Protocol": "-1",
+          "RuleAction": "allow",
+          "RuleNumber": "100",
+          "NetworkAclId": {
+            "Ref": "networkACL"
+          }
+        }
+      },
+      "acl2": {
+        "Type": "AWS::EC2::NetworkAclEntry",
+        "Properties": {
+          "CidrBlock": "0.0.0.0/0",
+          "Protocol": "-1",
+          "RuleAction": "allow",
+          "RuleNumber": "100",
+          "NetworkAclId": {
+            "Ref": "networkACL"
+          }
+        }
+      },
+      "gw1": {
+        "Type": "AWS::EC2::VPCGatewayAttachment",
+        "Properties": {
+          "VpcId": {
+            "Ref": "vpc"
+          },
+          "InternetGatewayId": {
+            "Ref": "internetGateway"
+          }
+        }
+      },
+      "route1": {
+        "Type": "AWS::EC2::Route",
+        "Properties": {
+          "DestinationCidrBlock": "0.0.0.0/0",
+          "RouteTableId": {
+            "Ref": "routeTable"
+          },
+          "GatewayId": {
+            "Ref": "internetGateway"
+          }
+        },
+        "DependsOn": "gw1"
+      },
+      "Subnet1": {
+        "Type": "AWS::EC2::Subnet",
+        "Properties": {
+          "CidrBlock": {
+            "Ref": "Subnet1Cidr"
+          },
+          "AvailabilityZone": { "Ref": "AvailabilityZone" },
+          "VpcId": {
+            "Ref": "vpc"
+          },
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": {
+                "Ref": "NameTag"
+              }
+            }
+          ]
+        }
+      },
+      "RouteTableAssociation": {
+        "Type": "AWS::EC2::SubnetRouteTableAssociation",
+        "Properties": {
+          "RouteTableId": {
+            "Ref": "routeTable"
+          },
+          "SubnetId": {
+            "Ref": "Subnet1"
+          }
+        }
+      },
+      "Instance": {
+        "Type" : "AWS::EC2::Instance",
+        "Metadata" : {
+          "AWS::CloudFormation::Init" : {
+            "configSets" : {
+              "default" : [ "linux001" ]
+            },
+            "linux001": {
+              "commands": {
+                "001": {
+                  "command": "apt-get -q -y install git"
+                },
+                "002": {
+                  "command": "apt-get -q -y install puppet"
+                },
+                "003": {
+                  "cwd": "/var/tmp",
+                  "command": "git clone https://github.com/nikw/logherder.git"
+                },
+                "004": {
+                  "cwd": "/var/tmp",
+                  "command": "cp -r logherder/puppet/modules/* /etc/puppet/modules"
+                },
+                "005": {
+                  "cwd": "/var/tmp",
+                  "command": "cp logherder/puppet/manifests/logherder.pp /etc/puppet/manifests"
+                },
+                "006": {
+                  "command": "puppet apply /etc/puppet/manifests/logherder.pp"
+                }
+              }
+            }
+          }
+        },
+        "Properties": {
+          "KeyName": "default",
+          "ImageId": { "Fn::FindInMap": [ "RegionMap", { "Ref": "AWS::Region" }, "64"] },
+          "InstanceType": { "Ref": "InstanceType" },
+          "Tags":[ { "Key": "Name", "Value": {"Ref": "NameTag"} } ],
+          "NetworkInterfaces": [{
+            "DeviceIndex": "0",
+            "AssociatePublicIpAddress": true,
+            "GroupSet": [{"Ref": "VpcSecurityGroup"}],
+            "SubnetId": {"Ref": "Subnet1"}
+          }],
+          "BlockDeviceMappings": [
+            { "DeviceName" : "/dev/xvda", "Ebs" : { "VolumeSize" : "8", "VolumeType": "gp2" } }
+          ],
+          "UserData"       : { "Fn::Base64": { "Fn::Join": ["", [
+            "#!/bin/bash -ex\n",
+
+            "# Helper function\n",
+            "function error_exit\n",
+            "{\n",
+            "  /usr/local/bin/cfn-signal -e 1 -r \"$1\" ",
+            "         --stack ", { "Ref" : "AWS::StackName" },
+            "         --resource ServerGroup ",
+            "         --region ", { "Ref" : "AWS::Region" }, "\n",
+            "  exit 1\n",
+            "}\n",
+
+            "apt-get -q -y install python-setuptools\n",
+            "easy_install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz\n",
+
+            "# Process CloudFormation init definitions\n",
+            "/usr/local/bin/cfn-init -s ", { "Ref": "AWS::StackName" }, " -r Instance",
+            "    --region ", { "Ref": "AWS::Region" }, " || error_exit 'Failed to run cfn-init'\n",
+
+            "# All is well so signal success\n",
+            "/usr/local/bin/cfn-signal -e 0 -d ",
+            "         --region ", { "Ref" : "AWS::Region" }, "\n",
+
+            "#EOF"
+              ]]}}
+        }
+      }
+    },
+    "Outputs": {
+    }
+}
