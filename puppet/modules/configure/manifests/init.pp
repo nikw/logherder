@@ -40,16 +40,17 @@ class configure {
 
   file { '/etc/haproxy/haproxy.cfg':
     require => Package['haproxy'],
-    owner => "root",
-    group => "root",
-    mode  => 644,
-    source => "puppet:///modules/configure/haproxy.cfg"
+    notify  => Service['haproxy'],
+    owner   => "root",
+    group   => "root",
+    mode    => 644,
+    source  => "puppet:///modules/configure/haproxy.cfg"
   }
 
-  file_line { 'haproxy_logging':
+  file { 'rsyslog-49-haproxy.conf':
     require => Package['haproxy', 'rsyslog'],
     path    => '/etc/rsyslog.d/49-haproxy.conf',
-    line    => "if $programname startswith 'haproxy' then @@127.0.0.1:5140    # Send HAProxy messages to logstash"
+    source => "puppet:///modules/configure/rsyslog-49-haproxy.conf"
   }
 
   file { '/etc/default/logstash-web':
@@ -79,8 +80,7 @@ class configure {
     require => [
       Service['elasticsearch'],
       Package['logstash'],
-      File['/etc/default/logstash-web', '/etc/logstash/conf.d/logherder.conf'],
-      File_Line['haproxy_logging']
+      File['/etc/default/logstash-web', '/etc/logstash/conf.d/logherder.conf', 'rsyslog-49-haproxy.conf']
     ],
     ensure => running,
     enable => true,
@@ -102,5 +102,4 @@ class configure {
     ensure => running,
     hasrestart => true,
   }
-
 }
