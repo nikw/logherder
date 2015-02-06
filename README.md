@@ -8,6 +8,8 @@ logstash/kibana and elasticsearch.
 
 To deploy with AWS CLI:
 
-  aws_profile=my_aws_profile
-  region=us-east-1
-  aws --profile $my_aws_profile cloudformation create-stack --stack-name LogHerder --region $region --template-body file://logherder.json --parameters file://params.json
+```
+aws_profile=my_aws_profile
+region=us-east-1
+aws --profile $my_aws_profile cloudformation create-stack --stack-name LogHerder --region $region --template-body file://logherder.json --parameters file://params.json
+```
