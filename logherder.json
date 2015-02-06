@@ -330,5 +330,10 @@
       }
     },
     "Outputs": {
+      "PublicIp": {
+        "Value": {
+          "Fn::GetAtt" : [ "Instance", "PublicDnsName" ]
+        }
+      }
     }
 }
