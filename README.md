@@ -28,15 +28,14 @@ appear in the sample dashboards.
 1. Modify params.json to suit your purposes. At a minimum you'll want to
    update AllowedIpPrefix
 1. Deploy with the following commands (changing your aws profile and target region as needed)
-```
-aws_profile=default
-region=us-east-1
-stack_name=LogHerder
-aws --profile $my_aws_profile cloudformation create-stack --stack-name $stack_name --region $region --template-body file://logherder.json --parameters file://params.json
-```
-1. Once the stack creation is done, the instance's public IP will show up in the Outputs section of this
-   command:
-```
-aws --profile nik.weidenbacher_at_gmail.com cloudformation --region us-east-1 describe-stacks --stack-name $stack_name
-```
+    ```
+    aws_profile=default
+    region=us-east-1
+    stack_name=LogHerder
+    aws --profile $my_aws_profile cloudformation create-stack --stack-name $stack_name --region $region --template-body file://logherder.json --parameters file://params.json
+    ```
+1. Once the stack creation is done, the instance's public IP will show up in the Outputs section of this command:
+    ```
+    aws --profile nik.weidenbacher_at_gmail.com cloudformation --region us-east-1 describe-stacks --stack-name $stack_name
+    ```
 1. ssh to it or hit it from your browser
