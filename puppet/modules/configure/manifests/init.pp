@@ -24,15 +24,8 @@ class configure {
     ensure => installed
   }
 
-  exec { 'install_puppet_stdlib':
-    command => "/usr/bin/puppet module install puppetlabs-stdlib"
-  }
-
   file_line { 'elasticsearch.http.cors.enabled':
-    require => [
-      Exec['install_puppet_stdlib'],
-      Package['elasticsearch']
-    ]
+    require => Package['elasticsearch'],
     path => '/etc/elasticsearch/elasticsearch.yml',
     line => 'http.cors.enabled: true',
   }

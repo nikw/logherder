@@ -1,0 +1,26 @@
+[
+  {
+    "ParameterKey": "InstanceType",
+    "ParameterValue": "t2.small"
+  },
+  {
+    "ParameterKey": "AllowedIpPrefix",
+    "ParameterValue": "1.1.1.1/32"
+  },
+  {
+    "ParameterKey": "VpcCidr",
+    "ParameterValue": "10.31.5.0/24"
+  },
+  {
+    "ParameterKey": "Subnet1Cidr",
+    "ParameterValue": "10.31.5.0/27"
+  },
+  {
+    "ParameterKey": "AvailabilityZone",
+    "ParameterValue": "us-east-1e"
+  },
+  {
+    "ParameterKey": "NameTag",
+    "ParameterValue": "Log herder"
+  }
+]
