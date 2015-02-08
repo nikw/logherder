@@ -49,7 +49,8 @@ class configure {
 
   file { '/etc/rsyslog.d/49-haproxy.conf':
     require => Package['haproxy', 'rsyslog'],
-    source => "puppet:///modules/configure/rsyslog-49-haproxy.conf"
+    notify  => Service['rsyslog'],
+    source  => "puppet:///modules/configure/rsyslog-49-haproxy.conf"
   }
 
   file { '/etc/default/logstash-web':
@@ -94,6 +95,12 @@ class configure {
         '/opt/logstash/patterns/haproxyviasyslog'
       ]
     ],
+    ensure => running,
+    enable => true,
+    hasrestart => true,
+  }
+
+  service { 'rsyslog':
     ensure => running,
     enable => true,
     hasrestart => true,
