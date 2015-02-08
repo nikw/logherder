@@ -47,10 +47,10 @@ class configure {
     source  => "puppet:///modules/configure/haproxy.cfg"
   }
 
-  file { 'rsyslog-49-haproxy.conf':
+  file { '/etc/rsyslog.d/49-haproxy.conf':
     require => Package['haproxy', 'rsyslog'],
-    path    => '/etc/rsyslog.d/49-haproxy.conf',
-    source => "puppet:///modules/configure/rsyslog-49-haproxy.conf"
+    notify  => Service['rsyslog'],
+    source  => "puppet:///modules/configure/rsyslog-49-haproxy.conf"
   }
 
   file { '/etc/default/logstash-web':
@@ -64,6 +64,14 @@ class configure {
     group => "root",
     mode  => 644,
     source => "puppet:///modules/configure/logherder.conf"
+  }
+
+  file { '/opt/logstash/patterns/haproxyviasyslog':
+    require => Package['logstash'],
+    owner => "root",
+    group => "root",
+    mode  => 644,
+    source => "puppet:///modules/configure/logstash-pattern-haproxyviasyslog"
   }
 
   service { 'elasticsearch':
@@ -80,8 +88,19 @@ class configure {
     require => [
       Service['elasticsearch'],
       Package['logstash'],
-      File['/etc/default/logstash-web', '/etc/logstash/conf.d/logherder.conf', 'rsyslog-49-haproxy.conf']
+      File[
+        '/etc/default/logstash-web',
+        '/etc/logstash/conf.d/logherder.conf',
+        '/etc/rsyslog.d/49-haproxy.conf',
+        '/opt/logstash/patterns/haproxyviasyslog'
+      ]
     ],
+    ensure => running,
+    enable => true,
+    hasrestart => true,
+  }
+
+  service { 'rsyslog':
     ensure => running,
     enable => true,
     hasrestart => true,
